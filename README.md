@@ -47,6 +47,9 @@ Note that in the future I'll make this more a legitimate Linux program.
 I'll set up a make file or something.  Yeah, that's what I'll do; make a 
 make file.  Or maybe I'll just go learn piano.
 
+I was going to make this a daemon, because I wanted to write a daemon,
+but then I realize that I'd have to call this program monitaurd.
+
 License
 -------
 
