@@ -22,21 +22,20 @@ Description
 -----------
 
 This program attempts to read a **urls** file in the **$HOME** directory of the user
-executing it, and sends an HTTP request to urls contained therein.  
+executing it, and sends an HTTP request to urls contained therein, generating a log
+file of responses.
 
-If it discovers problems (receives a 4xx, 5xx, or redirect response) then it will
-generate a log file, unless the previous log file has already stored the same
-results list, in which case it will disgard any log output and do nothing further.
-
-If a log file is generated, this program will then attempt to read an **emails** 
-file in the **$HOME** directory of the user executing it, and send emails to those 
-addresses containing the log file's contents, thus appropriating the email address
-owner's attention to potentially misbehaving urls.
+If it discovers problems (no response, 4xx, 5xx, redirect response) this
+program will then attempt to read an **emails** file in the **$HOME** directory
+of the user executing it, and send emails to those addresses.  The emails will 
+contain the log file's contents, thus appropriating the email owners'
+attention to potentially misbehaving urls.
 
 Issues
 ------
 
-Please let me know via Github's issue tracker.
+Please let me know via 
+[Github's issue tracker](https://github.com/spacez320/monitaur/issues).
 
 Development
 -----------
@@ -48,7 +47,7 @@ I'll set up a make file or something.  Yeah, that's what I'll do; make a
 make file.  Or maybe I'll just go learn piano.
 
 I was going to make this a daemon, because I wanted to write a daemon,
-but then I realize that I'd have to call this program monitaurd.
+but then I realized that I'd have to call this program monitaurd.
 
 License
 -------
