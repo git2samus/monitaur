@@ -1,0 +1,152 @@
+#!/bin/bash
+
+URLS_CONF="$HOME/.monitaur/urls"
+EMAILS_CONF="$HOME/.monitaur/emails"
+TIMEOUT=10
+OK_CODE_REGEXP='200'
+CLIENT_ERROR_CODE_REGEXP='400\|401\|402\|403\|404'
+SERVER_ERROR_CODE_REGEXP='500\|501\|502\|503'
+REDIRECTION_CODE_REGEXP='301\|307\|308'
+EXEC_TIME=$(date +%Y%m%d-%H%M%S)
+LOCAL_LOG_PATH='/var/log/monitaur'
+LOCAL_LOG="$LOCAL_LOG_PATH/monitaur_report-$EXEC_TIME.log"
+
+# checks a given url for a return status code
+check () {
+
+    message=''
+    status=''
+
+    result=$(wget -T $TIMEOUT -t 1 $1 -O /dev/null -o /dev/stdout) 
+    connected=$(echo $result | grep 'failed')
+
+    if [ "$connected" != "" ];
+        then
+
+            # the request didn't resolve
+            echo "[warn] $url: appears down?" &>> $LOCAL_LOG
+            return 1
+
+        else
+
+            # check for 200's, override redirections
+            status=$(echo $result | grep $OK_CODE_REGEXP)
+            if [ "$status" != "" ]; then
+                echo "[info] $url: appears ok." &>> $LOCAL_LOG
+                return 0
+            fi
+
+            # check for 400's
+            status=$(echo $result | grep $CLIENT_ERROR_CODE_REGEXP)
+            if [ "$status" != "" ]; then
+                echo "[warn] $url: client error." &>> $LOCAL_LOG
+                return 1
+            fi
+
+            # check for 500's
+            status=$(echo $result | grep $SERVER_ERROR_CODE_REGEXP)
+            if [ "$status" != "" ]; then
+                echo "[warn] $url: server error." &>> $LOCAL_LOG
+                return 1
+            fi
+
+            # check for 300's
+            status=$(echo $result | grep $REDIRECTION_CODE_REGEXP)
+            if [ "$status" != "" ]; then
+                echo "[warn] $url: redirecting." &>> $LOCAL_LOG
+                return 1
+            fi
+
+            # assume all is ok
+            echo "[info] $url: appears ok." &>> $LOCAL_LOG
+            return 0
+
+    fi
+
+    return 0
+}
+
+# sends an email of a generated monitaur log file
+alert () {
+
+    subject="Monitaur Report Alert"
+    
+    mail -s "$subject" $1 < $LOCAL_LOG
+
+    if [ ! $? -eq 0 ]; then
+        echo "Could not mail to $1"
+        exit 1
+    fi
+}
+
+# compares log files 
+compare_logs () {
+
+    firstLogText=$(tail -n +2 $1)
+    secondLogText=$(tail -n +2 $2)
+    if [ "$firstLogText" == "$secondLogText" ]; 
+        then return 1
+        else return 0
+    fi
+}
+
+# main execution
+monitaur_main () {
+
+    # check for necessary files
+
+    if [ ! -r $URLS_CONF ]; then
+        echo $URLS_CONF
+        echo 'There is no readable urls file, exiting.'
+        exit 1;
+    fi
+
+    if [ ! -r $EMAILS_CONF ]; then
+        echo 'There is no readable emails file, exiting.'
+        exit 1;
+    fi
+
+    # get the most recent log
+
+    lastLog="$LOCAL_LOG_PATH/$(ls -1 $LOCAL_LOG_PATH | tail -n1)"
+
+    # test log write
+
+    echo "Monitaur report start, $EXEC_TIME" >> $LOCAL_LOG
+    if [ ! $? -eq 0 ]; then
+        echo 'Could not write to log, exiting.'
+        exit 1;
+    fi
+
+    # check urls
+
+    mail=0
+    for url in `cat $URLS_CONF`; do
+        check $url
+        if [ ! $? -eq 0 ]; then mail=1; fi 
+    done
+
+    # mail results if shenanigans detected
+
+    if [ ! $mail -eq 0 ]; 
+        then
+
+            # check for a redundant log
+            if [ "$lastLog" != "" ]; then
+                compare_logs $lastLog $LOCAL_LOG
+                if [ $? -eq 1 ]; then
+                    rm $LOCAL_LOG
+                    exit 0
+                fi
+            fi
+
+            # email
+            for email in `cat $EMAILS_CONF`; do
+                alert $email
+            done
+
+        else rm $LOCAL_LOG   # remove log 
+    fi
+}
+
+monitaur_main
