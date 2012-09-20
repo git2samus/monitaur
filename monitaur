@@ -98,7 +98,12 @@ monitaur_main () {
 
     # get the most recent log
 
-    lastLog="$LOCAL_LOG_PATH/$(ls -1 "$LOCAL_LOG_PATH" | tail -n1)"
+    logs=("$LOCAL_LOG_PATH"/monitaur_report-*.log)
+    if ((${#logs[@]} > 0)); then
+        lastLog="${logs[-1]}"
+    else
+        lastLog=
+    fi
 
     # test log write
 
