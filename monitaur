@@ -116,10 +116,10 @@ monitaur_main () {
     # check urls
 
     mail=0
-    for url in `cat "$URLS_CONF"`; do
+    while read -r url; do
         check "$url"
         if (($? != 0)); then mail=1; fi 
-    done
+    done <"$URLS_CONF"
 
     # mail results if shenanigans detected
 
@@ -136,9 +136,9 @@ monitaur_main () {
             fi
 
             # email
-            for email in `cat "$EMAILS_CONF"`; do
+            while read -r email; do
                 alert "$email"
-            done
+            done <"$EMAILS_CONF"
 
         else rm "$LOCAL_LOG"   # remove log 
     fi
