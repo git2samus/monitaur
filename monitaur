@@ -4,9 +4,9 @@ URLS_CONF="$HOME/.monitaur/urls"
 EMAILS_CONF="$HOME/.monitaur/emails"
 TIMEOUT=10
 OK_CODE_REGEXP='200'
-CLIENT_ERROR_CODE_REGEXP='400\|401\|402\|403\|404'
-SERVER_ERROR_CODE_REGEXP='500\|501\|502\|503'
-REDIRECTION_CODE_REGEXP='301\|307\|308'
+CLIENT_ERROR_CODE_REGEXP='40[0-4]'
+SERVER_ERROR_CODE_REGEXP='50[0-3]'
+REDIRECTION_CODE_REGEXP='30[178]'
 EXEC_TIME=$(date +%Y%m%d-%H%M%S)
 LOCAL_LOG_PATH='/var/log/monitaur'
 LOCAL_LOG="$LOCAL_LOG_PATH/monitaur_report-$EXEC_TIME.log"
@@ -19,7 +19,7 @@ check () {
 
     result=$(wget -T "$TIMEOUT" -t 1 "$1" -O /dev/null -o /dev/stdout) 
 
-    if grep -q 'failed' <<<"$result";
+    if egrep -q 'failed' <<<"$result";
         then
 
             # the request didn't resolve
@@ -29,25 +29,25 @@ check () {
         else
 
             # check for 200's, override redirections
-            if grep -q "$OK_CODE_REGEXP" <<<"$result"; then
+            if egrep -q "$OK_CODE_REGEXP" <<<"$result"; then
                 echo "[info] $url: appears ok." &>> "$LOCAL_LOG"
                 return 0
             fi
 
             # check for 400's
-            if grep -q "$CLIENT_ERROR_CODE_REGEXP" <<<"$result"; then
+            if egrep -q "$CLIENT_ERROR_CODE_REGEXP" <<<"$result"; then
                 echo "[warn] $url: client error." &>> "$LOCAL_LOG"
                 return 1
             fi
 
             # check for 500's
-            if grep -q "$SERVER_ERROR_CODE_REGEXP" <<<"$result"; then
+            if egrep -q "$SERVER_ERROR_CODE_REGEXP" <<<"$result"; then
                 echo "[warn] $url: server error." &>> "$LOCAL_LOG"
                 return 1
             fi
 
             # check for 300's
-            if grep -q "$REDIRECTION_CODE_REGEXP" <<<"$result"; then
+            if egrep -q "$REDIRECTION_CODE_REGEXP" <<<"$result"; then
                 echo "[warn] $url: redirecting." &>> "$LOCAL_LOG"
                 return 1
             fi
