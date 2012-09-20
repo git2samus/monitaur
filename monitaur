@@ -14,10 +14,10 @@ LOCAL_LOG="$LOCAL_LOG_PATH/monitaur_report-$EXEC_TIME.log"
 # checks a given url for a return status code
 check () {
 
-    message=''
-    status=''
+    local message=''
+    local status=''
 
-    result=$(wget -T "$TIMEOUT" -t 1 "$1" -O /dev/null -o /dev/stdout) 
+    local result=$(wget -T "$TIMEOUT" -t 1 "$1" -O /dev/null -o /dev/stdout) 
 
     if egrep -q 'failed' <<<"$result";
         then
@@ -64,7 +64,7 @@ check () {
 # sends an email of a generated monitaur log file
 alert () {
 
-    subject="Monitaur Report Alert"
+    local subject="Monitaur Report Alert"
     
     mail -s "$subject" "$1" < "$LOCAL_LOG"
 
@@ -98,11 +98,11 @@ monitaur_main () {
 
     # get the most recent log
 
-    logs=("$LOCAL_LOG_PATH"/monitaur_report-*.log)
+    local logs=("$LOCAL_LOG_PATH"/monitaur_report-*.log)
     if ((${#logs[@]} > 0)); then
-        lastLog="${logs[-1]}"
+        local lastLog="${logs[-1]}"
     else
-        lastLog=
+        local lastLog=
     fi
 
     # test log write
@@ -115,7 +115,7 @@ monitaur_main () {
 
     # check urls
 
-    mail=0
+    local mail=0
     while read -r url; do
         check "$url"
         if (($? != 0)); then mail=1; fi 
