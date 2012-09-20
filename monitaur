@@ -18,9 +18,8 @@ check () {
     status=''
 
     result=$(wget -T "$TIMEOUT" -t 1 "$1" -O /dev/null -o /dev/stdout) 
-    connected=$(echo "$result" | grep 'failed')
 
-    if [ "$connected" != "" ];
+    if grep -q 'failed' <<<"$result";
         then
 
             # the request didn't resolve
@@ -30,29 +29,25 @@ check () {
         else
 
             # check for 200's, override redirections
-            status=$(echo "$result" | grep "$OK_CODE_REGEXP")
-            if [ "$status" != "" ]; then
+            if grep -q "$OK_CODE_REGEXP" <<<"$result"; then
                 echo "[info] $url: appears ok." &>> "$LOCAL_LOG"
                 return 0
             fi
 
             # check for 400's
-            status=$(echo "$result" | grep "$CLIENT_ERROR_CODE_REGEXP")
-            if [ "$status" != "" ]; then
+            if grep -q "$CLIENT_ERROR_CODE_REGEXP" <<<"$result"; then
                 echo "[warn] $url: client error." &>> "$LOCAL_LOG"
                 return 1
             fi
 
             # check for 500's
-            status=$(echo "$result" | grep "$SERVER_ERROR_CODE_REGEXP")
-            if [ "$status" != "" ]; then
+            if grep -q "$SERVER_ERROR_CODE_REGEXP" <<<"$result"; then
                 echo "[warn] $url: server error." &>> "$LOCAL_LOG"
                 return 1
             fi
 
             # check for 300's
-            status=$(echo "$result" | grep "$REDIRECTION_CODE_REGEXP")
-            if [ "$status" != "" ]; then
+            if grep -q "$REDIRECTION_CODE_REGEXP" <<<"$result"; then
                 echo "[warn] $url: redirecting." &>> "$LOCAL_LOG"
                 return 1
             fi
