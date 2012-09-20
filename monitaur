@@ -68,7 +68,7 @@ alert () {
     
     mail -s "$subject" "$1" < "$LOCAL_LOG"
 
-    if [ ! $? -eq 0 ]; then
+    if (($? != 0)); then
         echo "Could not mail to $1" >&2
         exit 1
     fi
@@ -108,7 +108,7 @@ monitaur_main () {
     # test log write
 
     echo "Monitaur report start, $EXEC_TIME" >> "$LOCAL_LOG"
-    if [ ! $? -eq 0 ]; then
+    if (($? != 0)); then
         echo 'Could not write to log, exiting.' >&2
         exit 1;
     fi
@@ -118,18 +118,18 @@ monitaur_main () {
     mail=0
     for url in `cat "$URLS_CONF"`; do
         check "$url"
-        if [ ! $? -eq 0 ]; then mail=1; fi 
+        if (($? != 0)); then mail=1; fi 
     done
 
     # mail results if shenanigans detected
 
-    if [ ! "$mail" -eq 0 ]; 
+    if (($mail != 0)); 
         then
 
             # check for a redundant log
             if [ "$lastLog" != "" ]; then
                 compare_logs "$lastLog" "$LOCAL_LOG"
-                if [ $? -eq 1 ]; then
+                if (($? == 1)); then
                     rm "$LOCAL_LOG"
                     exit 0
                 fi
