@@ -77,10 +77,7 @@ alert () {
 # compares log files 
 compare_logs () {
 
-    if diff -q <(tail -n +2 "$1") <(tail -n +2 "$2") >/dev/null; 
-        then return 1
-        else return 0
-    fi
+    ! diff -q <(tail -n +2 "$1") <(tail -n +2 "$2") >/dev/null
 }
 
 # main execution
