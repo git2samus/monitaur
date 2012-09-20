@@ -69,7 +69,7 @@ alert () {
     mail -s "$subject" "$1" < "$LOCAL_LOG"
 
     if [ ! $? -eq 0 ]; then
-        echo "Could not mail to $1"
+        echo "Could not mail to $1" >&2
         exit 1
     fi
 }
@@ -91,13 +91,13 @@ monitaur_main () {
     # check for necessary files
 
     if [ ! -r "$URLS_CONF" ]; then
-        echo "$URLS_CONF"
-        echo 'There is no readable urls file, exiting.'
+        echo "$URLS_CONF" >&2
+        echo 'There is no readable urls file, exiting.' >&2
         exit 1;
     fi
 
     if [ ! -r "$EMAILS_CONF" ]; then
-        echo 'There is no readable emails file, exiting.'
+        echo 'There is no readable emails file, exiting.' >&2
         exit 1;
     fi
 
@@ -109,7 +109,7 @@ monitaur_main () {
 
     echo "Monitaur report start, $EXEC_TIME" >> "$LOCAL_LOG"
     if [ ! $? -eq 0 ]; then
-        echo 'Could not write to log, exiting.'
+        echo 'Could not write to log, exiting.' >&2
         exit 1;
     fi
 
